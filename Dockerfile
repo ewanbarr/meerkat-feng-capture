@@ -62,6 +62,7 @@ WORKDIR $PSRHOME
 COPY psrdada_cvs_login $PSRHOME
 RUN ls -lrt psrdada_cvs_login && \
     chmod +x psrdada_cvs_login &&\
+    sleep 1 &&\
     ./psrdada_cvs_login && \
     cvs -z3 -d:pserver:anonymous@psrdada.cvs.sourceforge.net:/cvsroot/psrdada co -P psrdada
 ENV PSRDADA_HOME $PSRHOME/psrdada
@@ -90,7 +91,7 @@ ENV PACKAGES $PACKAGES:$(pwd)/build
 #install PSRDADA_CPP
 RUN git clone https://github.com/ewanbarr/psrdada_cpp &&\
     cd psrdada_cpp &&\
-    git checkout stream_arch &&\
+    git checkout master &&\
     mkdir build/ &&\
     cd build/ &&\
     cmake -DENABLE_CUDA=true ../ &&\
