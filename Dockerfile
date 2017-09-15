@@ -47,6 +47,8 @@ RUN apt-get --no-install-recommends -y install \
     hwloc \
     libhwloc-dev \
     libboost-all-dev \
+    libibverbs-dev \
+    librdmacm-dev \ 
     pkg-config
 
 # Define home, psrhome, OSTYPE and create the directory
