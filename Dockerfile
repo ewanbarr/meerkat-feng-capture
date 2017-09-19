@@ -100,7 +100,11 @@ RUN git clone https://github.com/ewanbarr/psrdada_cpp &&\
 
 #install MKRecv
 RUN git config --global http.sslverify false &&\
-    git clone https://gitlab.mpifr-bonn.mpg.de/mhein/mkrecv.git    
+    git clone https://gitlab.mpifr-bonn.mpg.de/mhein/mkrecv.git &&\
+    cd mkrecv &&\
+    cmake -DCMAKE_INSTALL_PREFIX=$PSRHOME . &&\
+    make -j 32 &&\
+    make install
 
 WORKDIR $HOME
 RUN env | awk '{print "export ",$0}' > $HOME/.profile && \
