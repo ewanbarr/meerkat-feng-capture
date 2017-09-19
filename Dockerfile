@@ -83,7 +83,7 @@ WORKDIR $PSRHOME
 RUN git clone https://github.com/ska-sa/spead2.git && \
     cd spead2 && \
     ./bootstrap.sh && \
-    ./configure --prefix=$PSRHOME && \
+    ./configure --prefix=/usr/local && \
     make -j && \
     make install && \
     make clean 
