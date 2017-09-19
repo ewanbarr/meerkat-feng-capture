@@ -69,24 +69,24 @@ ENV PSRDADA_HOME $PSRHOME/psrdada
 WORKDIR $PSRDADA_HOME
 RUN mkdir build/ && \
     ./bootstrap && \
-    ./configure --prefix=$PSRDADA_HOME/build && \
+    ./configure --prefix=$PSRHOME && \
     make && \
     make install && \
     make clean 
-ENV PATH $PATH:$PSRDADA_HOME/build/bin
-ENV PSRDADA_BUILD $PSRDADA_HOME/build/
+ENV PATH $PATH:$PSRHOME/bin
+ENV PSRDADA_BUILD $PSRHOME
 ENV PACKAGES $PSRDADA_BUILD
 
 # Install SPEAD2
 WORKDIR $PSRHOME
-RUN git clone https://github.com/ska-sa/spead2.git
-WORKDIR $PSRHOME/spead2
-RUN ./bootstrap.sh && \
-    ./configure --prefix=$(pwd)/build && \
+RUN git clone https://github.com/ska-sa/spead2.git && \
+    cd spead2 && \
+    ./bootstrap.sh && \
+    ./configure --prefix=$PSRHOME && \
     make -j && \
     make install && \
     make clean 
-ENV PACKAGES $PACKAGES:$(pwd)/build
+ENV PACKAGES $PACKAGES:$PSRHOME
 
 #install PSRDADA_CPP
 RUN git clone https://github.com/ewanbarr/psrdada_cpp &&\
@@ -94,9 +94,13 @@ RUN git clone https://github.com/ewanbarr/psrdada_cpp &&\
     git checkout master &&\
     mkdir build/ &&\
     cd build/ &&\
-    cmake -DENABLE_CUDA=true ../ &&\
+    cmake -DENABLE_CUDA=true -DCMAKE_INSTALL_PREFIX=$PSRHOME ../ &&\
     make -j 32 &&\
     make install
+
+#install MKRecv
+RUN git config --global http.sslverify false &&\
+    git clone https://gitlab.mpifr-bonn.mpg.de/mhein/mkrecv.git    
 
 WORKDIR $HOME
 RUN env | awk '{print "export ",$0}' > $HOME/.profile && \
