@@ -38,6 +38,8 @@ RUN apt-get --no-install-recommends -y install \
     git \
     cvs \
     cmake \
+    vim \
+    net-tools \
     expect \
     libcfitsio-dev \
     libltdl-dev \
@@ -69,11 +71,10 @@ ENV PSRDADA_HOME $PSRHOME/psrdada
 WORKDIR $PSRDADA_HOME
 RUN mkdir build/ && \
     ./bootstrap && \
-    ./configure --prefix=$PSRHOME && \
+    ./configure --prefix=/usr/local && \
     make && \
     make install && \
     make clean 
-ENV PATH $PATH:$PSRHOME/bin
 ENV PSRDADA_BUILD $PSRHOME
 ENV PACKAGES $PSRDADA_BUILD
 
@@ -89,21 +90,22 @@ RUN git clone https://github.com/ska-sa/spead2.git && \
 ENV PACKAGES $PACKAGES:$PSRHOME
 
 #install PSRDADA_CPP
-RUN git clone https://github.com/ewanbarr/psrdada_cpp &&\
-    cd psrdada_cpp &&\
-    git checkout master &&\
-    mkdir build/ &&\
-    cd build/ &&\
-    cmake -DENABLE_CUDA=true -DCMAKE_INSTALL_PREFIX=$PSRHOME ../ &&\
-    make -j 32 &&\
-    make install
+WORKDIR $PSRHOME
+RUN git clone https://github.com/ewanbarr/psrdada_cpp && \
+    cd psrdada_cpp && \
+    git checkout master && \
+    cmake -DENABLE_CUDA=true -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j 32 && \
+    make install && \
+    make clean
 
 #install MKRecv
-RUN git config --global http.sslverify false &&\
-    git clone https://gitlab.mpifr-bonn.mpg.de/mhein/mkrecv.git &&\
-    cd mkrecv &&\
-    cmake -DCMAKE_INSTALL_PREFIX=$PSRHOME . &&\
-    make -j 32 &&\
+WORKDIR $PSRHOME
+RUN git config --global http.sslverify false && \
+    git clone https://gitlab.mpifr-bonn.mpg.de/mhein/mkrecv.git && \
+    cd mkrecv && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j 32 && \
     make install
 
 WORKDIR $HOME
