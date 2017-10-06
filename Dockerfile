@@ -5,26 +5,49 @@
 # as you do not remove the above attribution and reasonably
 # inform receipients that you have modified the original work.
 
-FROM nvidia/cuda:8.0-devel-ubuntu16.04
+FROM ubuntu:16.04
 
-MAINTAINER Ewan Barr "ebarr@mpifr-bonn.mpg.de"
+MAINTAINER Ewan Barr <ewan.d.barr@gmail.com>
 
-# Suppress debconf warnings
-ENV DEBIAN_FRONTEND noninteractive
+# Set the working directory to /
+WORKDIR /
+
+# Pick up some MOFED dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    net-tools \
+    ethtool \
+    perl \
+    lsb-release \
+    iproute2 \
+    pciutils \
+    libnl-route-3-200 \
+    kmod \
+    libnuma1 \
+    lsof \
+    linux-headers-4.4.0-92-generic \
+    python-libxml2 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download and install Mellanox OFED 4.1.1 for Ubuntu 16.04
+RUN wget http://content.mellanox.com/ofed/MLNX_OFED-4.1-1.0.2.0/MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64.tgz && \
+    tar -xzvf MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64.tgz && \
+    MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64/mlnxofedinstall --user-space-only --without-fw-update --all -q && \
+    cd .. && \
+    rm -rf MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64 && \
+    rm -rf *.tgz
 
 # Switch account to root and adding user accounts and password
 USER root
 
-# Create space for ssh daemon and update the system
-RUN echo 'deb http://us.archive.ubuntu.com/ubuntu trusty main multiverse' >> /etc/apt/sources.list && \
-    apt-get -y check && \
-    apt-get -y update && \
-    apt-get install -y apt-utils apt-transport-https software-properties-common python-software-properties && \
-    apt-get -y update --fix-missing && \
-    apt-get -y upgrade 
+COPY sources.list /etc/apt/sources.list
 
 # Install dependencies
-RUN apt-get --no-install-recommends -y install \
+RUN apt-get update &&\
+    apt-get --no-install-recommends --allow-unauthenticated -y install \
+    apt-transport-https \
+    apt-utils \
+    software-properties-common \
     build-essential \
     autoconf \
     autotools-dev \
@@ -49,13 +72,10 @@ RUN apt-get --no-install-recommends -y install \
     hwloc \
     libhwloc-dev \
     libboost-all-dev \
-    libibverbs-dev \
-    librdmacm-dev \ 
     pkg-config
 
 # Define home, psrhome, OSTYPE and create the directory
-ENV HOME /home/psr
-ENV PSRHOME $HOME/software
+ENV PSRHOME /software/
 ENV OSTYPE linux
 RUN mkdir -p $PSRHOME
 WORKDIR $PSRHOME
@@ -69,6 +89,7 @@ RUN ls -lrt psrdada_cvs_login && \
     cvs -z3 -d:pserver:anonymous@psrdada.cvs.sourceforge.net:/cvsroot/psrdada co -P psrdada
 ENV PSRDADA_HOME $PSRHOME/psrdada
 WORKDIR $PSRDADA_HOME
+COPY PsrdadaMakefile.am $PSRDADA_HOME/Makefile.am
 RUN mkdir build/ && \
     ./bootstrap && \
     ./configure --prefix=/usr/local && \
@@ -108,7 +129,7 @@ RUN git config --global http.sslverify false && \
     make -j 32 && \
     make install
 
-WORKDIR $HOME
-RUN env | awk '{print "export ",$0}' > $HOME/.profile && \
-    echo "source $HOME/.profile" >> $HOME/.bashrc
-USER root
+#WORKDIR $HOME
+#RUN env | awk '{print "export ",$0}' > $HOME/.profile && \
+#    echo "source $HOME/.profile" >> $HOME/.bashrc
+#USER root
