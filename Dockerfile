@@ -103,19 +103,23 @@ ENV PACKAGES $PSRDADA_BUILD
 WORKDIR $PSRHOME
 RUN git clone https://github.com/ska-sa/spead2.git && \
     cd spead2 && \
-    ./bootstrap.sh && \
+    ./bootstrap.sh --no-python && \
     ./configure --prefix=/usr/local && \
     make -j && \
     make install && \
     make clean 
 ENV PACKAGES $PACKAGES:$PSRHOME
 
+ENV ARSE 2
+
 #install PSRDADA_CPP
 WORKDIR $PSRHOME
 RUN git clone https://github.com/ewanbarr/psrdada_cpp && \
     cd psrdada_cpp && \
     git checkout master && \
-    cmake -DENABLE_CUDA=true -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    mkdir build && \
+    cd build && \
+    cmake -DENABLE_CUDA=true -DCMAKE_INSTALL_PREFIX=/usr/local ../ && \
     make -j 32 && \
     make install && \
     make clean
@@ -125,9 +129,14 @@ WORKDIR $PSRHOME
 RUN git config --global http.sslverify false && \
     git clone https://gitlab.mpifr-bonn.mpg.de/mhein/mkrecv.git && \
     cd mkrecv && \
+    git checkout master && \
     cmake -DCMAKE_INSTALL_PREFIX=/usr/local && \
     make -j 32 && \
     make install
+
+RUN apt-get update && \
+    apt-get install numactl && \
+    rm -rf /var/lib/apt/lists/*    	    
 
 #WORKDIR $HOME
 #RUN env | awk '{print "export ",$0}' > $HOME/.profile && \
