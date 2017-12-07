@@ -9,9 +9,6 @@ FROM ubuntu:16.04
 
 MAINTAINER Ewan Barr <ewan.d.barr@gmail.com>
 
-# Set the working directory to /
-WORKDIR /
-
 # Pick up some MOFED dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
@@ -39,8 +36,6 @@ RUN wget http://content.mellanox.com/ofed/MLNX_OFED-4.1-1.0.2.0/MLNX_OFED_LINUX-
 
 # Switch account to root and adding user accounts and password
 USER root
-
-COPY sources.list /etc/apt/sources.list
 
 # Install dependencies
 RUN apt-get update &&\
@@ -81,12 +76,7 @@ RUN mkdir -p $PSRHOME
 WORKDIR $PSRHOME
 
 # Install PSRDADA
-COPY psrdada_cvs_login $PSRHOME
-RUN ls -lrt psrdada_cvs_login && \
-    chmod +x psrdada_cvs_login &&\
-    sleep 1 &&\
-    ./psrdada_cvs_login && \
-    cvs -z3 -d:pserver:anonymous@psrdada.cvs.sourceforge.net:/cvsroot/psrdada co -P psrdada
+RUN git clone git://git.code.sf.net/p/psrdada/code psrdada
 ENV PSRDADA_HOME $PSRHOME/psrdada
 WORKDIR $PSRDADA_HOME
 COPY PsrdadaMakefile.am $PSRDADA_HOME/Makefile.am
@@ -105,12 +95,12 @@ RUN git clone https://github.com/ska-sa/spead2.git && \
     cd spead2 && \
     ./bootstrap.sh --no-python && \
     ./configure --prefix=/usr/local && \
-    make -j && \
+    make -j 6 && \
     make install && \
     make clean 
 ENV PACKAGES $PACKAGES:$PSRHOME
 
-ENV ARSE 2
+ENV ARSE 3 
 
 #install PSRDADA_CPP
 WORKDIR $PSRHOME
@@ -120,7 +110,7 @@ RUN git clone https://github.com/ewanbarr/psrdada_cpp && \
     mkdir build && \
     cd build && \
     cmake -DENABLE_CUDA=true -DCMAKE_INSTALL_PREFIX=/usr/local ../ && \
-    make -j 32 && \
+    make -j 6 && \
     make install && \
     make clean
 
@@ -131,7 +121,7 @@ RUN git config --global http.sslverify false && \
     cd mkrecv && \
     git checkout master && \
     cmake -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    make -j 32 && \
+    make -j 6 && \
     make install
 
 RUN apt-get update && \
